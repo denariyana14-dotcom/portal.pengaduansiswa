@@ -3,618 +3,923 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Pengaduan Siswa</title>
+    <title>Sistem Peminjaman Barang Sekolah</title>
+    <!-- Menggunakan Tailwind CSS untuk styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icon Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #F0F4F8; /* Light blue-gray background */
+            background-color: #f0f4f8; /* Latar belakang biru muda yang lembut */
         }
-        .toast {
-            visibility: hidden;
-            min-width: 250px;
-            margin-left: -125px;
-            background-color: #001F3F; /* Navy */
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 50;
-            left: 50%;
-            bottom: 30px;
-            opacity: 0;
-            transition: visibility 0s, opacity 0.5s linear;
+        /* Style untuk transisi dan elemen kustom */
+        #notification, #login-screen, #app-screen, .modal {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
         }
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
+        .modal-overlay {
+            background-color: rgba(0,0,0,0.6);
         }
-        .hidden {
-            display: none;
-        }
-        .login-bg {
-            background-color: #001F3F; /* Basis Navy */
-            background-image: radial-gradient(circle at 15% 15%, hsla(46, 65%, 52%, 0.25) 0%, transparent 40%),
-                              radial-gradient(circle at 85% 75%, hsla(349, 45%, 65%, 0.2) 0%, transparent 40%);
-            background-size: cover;
-            background-position: center;
+        .form-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
         .btn-primary {
-            background-color: #001F3F; /* Navy */
-            color: white;
-            transition: all 0.3s ease;
+            background-color: #4f46e5; /* Indigo */
         }
         .btn-primary:hover {
-            background-color: #003366; /* Darker Navy */
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 31, 63, 0.3);
+            background-color: #4338ca;
         }
         .btn-secondary {
-            background-color: #ffffff;
-            color: #001F3F; /* Navy */
-            border: 1px solid #e0e0e0;
-             transition: all 0.3s ease;
+             background-color: #10b981; /* Emerald */
         }
         .btn-secondary:hover {
-             background-color: #f1f1f1;
+            background-color: #059669;
         }
-        .btn-yellow {
-             background-color: #FBBF24; /* Yellow Accent - amber-400 */
-             color: #001F3F;
-             font-weight: 600;
-             transition: all 0.3s ease;
+        /* Latar belakang dengan pola geometris */
+        .login-bg {
+            background-color: #eef2ff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23c7d2fe' fill-opacity='0.4'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0h1v5h9V0h1v5h9V0h1v5h9V0h1v5h9V0h1v5h9V0h1v5h9V0h1v5h9V0h1v5h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h-1v-9h-9v9h-1v-9h-9v9h-1v-9h-9v9h-1v-9h-9v9h-1v-9h-9v9h-1v-9h-9v9h-1v-9h-9v9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4V0h1v4h9V0h1v4h9V0h1v4h9V0h1v4h9V0h1v4h9V0h1v4h9V0h1v4h9V0h1v4h5v1h-5v9h5v1h-5v9h5v1h-5v9h5v1h-5v9h5v1h-5v9h5v1h-5v9h5v1h-5v9h5v1h-5v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-        .btn-yellow:hover {
-            background-color: #F59E0B; /* amber-500 */
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #report-screen, #report-screen * {
+                visibility: visible;
+            }
+            #report-screen {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none;
+            }
         }
-        .btn-yellow:disabled {
-            background-color: #FCD34D;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        .form-input {
-            border: 1px solid #D1D5DB;
-            transition: all 0.3s ease;
-        }
-        .form-input:focus {
-            outline: none;
-            border-color: #FBBF24; /* Yellow Accent */
-            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
-        }
-        .card {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border-left-width: 5px;
-        }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-
-        /* Status Border Colors */
-        .card-status-Terkirim { border-left-color: #3B82F6; }
-        .card-status-Diproses { border-left-color: #F59E0B; }
-        .card-status-Selesai { border-left-color: #10B981; }
-        .card-status-Ditolak { border-left-color: #EF4444; }
     </style>
 </head>
-<body class="text-gray-800">
+<body>
 
-    <!-- Halaman Login / Homepage Banner -->
-    <div id="login-container" class="min-h-screen flex flex-col items-center justify-center login-bg p-4">
-        <div class="max-w-md w-full text-center text-white p-8">
-            <h1 class="text-5xl md:text-6xl font-bold mb-4" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3)">Portal Pengaduan Siswa</h1>
-            <p class="text-lg text-gray-200 mb-10">Salurkan aspirasimu tanpa batasan</p>
-            
-            <!-- Tombol Login Utama -->
-            <div id="main-login-buttons" class="space-y-4">
-                <button id="login-siswa" class="w-full text-lg bg-white text-[#001F3F] font-semibold py-3 px-4 rounded-lg hover:bg-gray-200 transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span>Masuk sebagai Siswa</span>
-                </button>
-                <button id="show-admin-login" class="w-full text-lg bg-black bg-opacity-50 text-white font-semibold py-3 px-4 rounded-lg hover:bg-opacity-70 border border-gray-300 transition duration-300 hover:scale-105 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    <span>Masuk sebagai Admin</span>
-                </button>
+    <!-- ===== LAYAR LOGIN ===== -->
+    <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center p-4 login-bg">
+        <div class="max-w-md w-full text-center mb-6">
+            <div class="inline-block bg-white p-4 rounded-full shadow-md">
+                <i class="fas fa-school fa-2x text-indigo-600"></i>
             </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mt-4">Inventaris Sekolah</h1>
+            <p class="text-lg text-gray-600 mt-2">Platform Peminjaman Barang</p>
+        </div>
 
-            <!-- Form Password Admin (Disembunyikan) -->
-            <div id="admin-login-form" class="hidden mt-4 bg-black bg-opacity-30 p-6 rounded-lg backdrop-blur-sm">
-                <h3 class="text-xl font-semibold mb-4">Login Admin</h3>
-                <form id="admin-password-form">
-                    <input type="password" id="admin-password" placeholder="Masukkan Password" class="w-full px-4 py-2 rounded-lg text-gray-800 form-input mb-4" required>
-                    <div class="flex gap-4">
-                        <button type="submit" class="w-full text-lg btn-primary py-2 px-4 rounded-lg">Login</button>
-                        <button type="button" id="cancel-admin-login" class="w-full text-lg bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition">Batal</button>
+        <div class="max-w-md w-full form-container">
+            <!-- Form Login Siswa -->
+            <div id="student-login">
+                <h2 class="text-2xl font-semibold mb-6 text-center text-gray-700">Login sebagai Siswa</h2>
+                <form id="studentLoginForm">
+                    <div class="space-y-4">
+                        <div class="relative">
+                             <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="studentName" class="pl-12 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required placeholder="Masukkan Nama Lengkap Anda">
+                        </div>
+                        <div class="relative">
+                             <i class="fas fa-chalkboard-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="studentClass" class="pl-12 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required placeholder="Masukkan Kelas Anda (Contoh: XII E)">
+                        </div>
+                        <button type="submit" class="w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 btn-primary flex items-center justify-center gap-2">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Masuk</span>
+                        </button>
                     </div>
                 </form>
+                <div class="text-center mt-6">
+                    <button id="showAdminLoginBtn" class="text-sm text-indigo-600 hover:underline font-medium">Masuk sebagai Admin?</button>
+                </div>
+            </div>
+            
+            <!-- Form Login Admin (tersembunyi) -->
+            <div id="admin-login" class="hidden">
+                 <h2 class="text-2xl font-semibold mb-6 text-center text-gray-700">Login sebagai Admin</h2>
+                <form id="adminLoginForm">
+                    <div class="space-y-4">
+                        <div class="relative">
+                            <i class="fas fa-user-shield absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="adminUser" value="adminsekolah.sma1dramaga" class="pl-12 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                         <div class="relative">
+                            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="password" id="adminPass" class="pl-12 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Masukkan Password">
+                        </div>
+                        <button type="submit" class="w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 btn-secondary flex items-center justify-center gap-2">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Masuk</span>
+                        </button>
+                    </div>
+                </form>
+                 <div class="text-center mt-6">
+                    <button id="showStudentLoginBtn" class="text-sm text-indigo-600 hover:underline font-medium">Bukan Admin?</button>
+                </div>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-6">Barang di pinjam,tanggung jawab dipegang. Kita jaga bersama!</p>
+        <p class="text-xs text-gray-700 mt-2 font-semibold">by Dena Riyana XII.E</p>
+    </div>
+
+    <!-- ===== APLIKASI UTAMA (tersembunyi) ===== -->
+    <div id="app-screen" class="hidden opacity-0">
+        <div class="container mx-auto p-4 sm:p-6 md:p-8">
+            <header class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b-2 border-gray-200">
+                <div>
+                     <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Dashboard Inventaris</h1>
+                     <p id="welcomeMessage" class="text-md text-gray-600 mt-1"></p>
+                </div>
+                <button id="logoutButton" class="mt-4 sm:mt-0 flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </button>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Kolom Kiri -->
+                <div class="lg:col-span-1 space-y-8">
+                    <!-- Panel Barang Pinjaman Siswa -->
+                    <div id="my-loans-wrapper" class="hidden bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-4 border-b pb-3 flex items-center gap-3 text-gray-700"><i class="fas fa-box-open text-sky-500"></i>Barang Pinjaman Saya</h2>
+                        <div id="myLoansList" class="space-y-4 pt-2">
+                           <!-- Daftar pinjaman siswa akan dirender di sini -->
+                        </div>
+                    </div>
+                    
+                    <!-- Form Peminjaman -->
+                    <div id="loan-form-wrapper" class="bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-4 border-b pb-3 flex items-center gap-3 text-gray-700"><i class="fas fa-edit text-indigo-500"></i>Ajukan Peminjaman</h2>
+                        <form id="loanForm" class="space-y-4 pt-2">
+                            <div>
+                                <label for="borrowerName" class="block text-sm font-medium text-gray-700">Nama Peminjam</label>
+                                <input type="text" id="borrowerName" name="borrowerName" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm" required>
+                            </div>
+                             <div>
+                                <label for="borrowerClass" class="block text-sm font-medium text-gray-700">Kelas</label>
+                                <input type="text" id="borrowerClass" name="borrowerClass" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm" required>
+                            </div>
+                            <div>
+                                <label for="itemSelect" class="block text-sm font-medium text-gray-700">Pilih Barang</label>
+                                <select id="itemSelect" name="itemSelect" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required></select>
+                            </div>
+                             <div>
+                                <label for="loanDate" class="block text-sm font-medium text-gray-700">Tanggal Pinjam</label>
+                                <input type="date" id="loanDate" name="loanDate" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            </div>
+                            <button type="submit" class="w-full btn-primary text-white font-bold py-2.5 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 flex items-center justify-center gap-2">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Ajukan Pinjaman</span>
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Kontrol Admin -->
+                    <div id="admin-controls" class="hidden bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-4 border-b pb-3 flex items-center gap-3 text-gray-700"><i class="fas fa-cogs text-emerald-500"></i>Panel Admin</h2>
+                        <div class="space-y-3 pt-2">
+                             <button id="showAddItemModalBtn" class="w-full btn-secondary text-white font-bold py-2.5 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 flex items-center justify-center gap-2">
+                                 <i class="fas fa-plus-circle"></i>
+                                 <span>Tambah Barang Baru</span>
+                            </button>
+                             <button id="generateReportBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 flex items-center justify-center gap-2">
+                                 <i class="fas fa-file-alt"></i>
+                                 <span>Buat Laporan Kerusakan</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Daftar Inventaris -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4 border-b pb-3 flex items-center gap-3 text-gray-700"><i class="fas fa-clipboard-list text-gray-500"></i>Daftar Semua Barang</h2>
+                    <div class="overflow-x-auto mt-2">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead id="inventoryTableHead" class="bg-gray-50">
+                                <!-- Headers generated by JS -->
+                            </thead>
+                            <tbody id="inventoryTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <!-- ===== LAYAR LAPORAN (tersembunyi) ===== -->
+    <div id="report-screen" class="hidden opacity-0 bg-white p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold">LAPORAN KERUSAKAN BARANG INVENTARIS</h1>
+                <h2 class="text-lg">SMA NEGERI 1 DRAMAGA</h2>
+                <p id="reportDate" class="text-sm"></p>
+            </div>
+            
+            <div id="reportContent">
+                <!-- Konten laporan akan dirender di sini -->
+            </div>
 
-    <!-- Konten Aplikasi Utama -->
-    <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-4xl hidden">
-        <header class="bg-[#001F3F] rounded-xl shadow-lg p-4 flex justify-between items-center mb-8">
-              <div>
-                  <h1 class="text-2xl md:text-3xl font-bold text-white">Beranda Aspirasi</h1>
-              </div>
-              <div class="flex items-center gap-4">
-                  <button id="show-form-button" class="py-2 px-4 rounded-lg btn-yellow flex items-center gap-2 hidden">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                      </svg>
-                      <span>Buat Laporan</span>
-                  </button>
-                  <button id="logout-button" class="font-semibold py-2 px-4 rounded-lg btn-secondary transition duration-300">
-                      Keluar
-                  </button>
-              </div>
-        </header>
-
-        <main>
-            <!-- Form untuk Laporan Baru (Hanya untuk Siswa, disembunyikan secara default) -->
-            <section id="form-laporan" class="bg-white rounded-xl shadow-lg overflow-hidden mb-8 hidden">
-                <div class="bg-gradient-to-r from-[#001F3F] to-[#003366] p-5">
-                    <h2 class="text-2xl font-semibold text-white">Buat Laporan Baru</h2>
-                    <p class="text-sm text-gray-300 mt-1">Isi formulir di bawah ini untuk mengirimkan aspirasimu.</p>
+            <div class="mt-20 text-sm">
+                <div class="flex justify-between">
+                    <div class="text-center">
+                        <p>Mengetahui,</p>
+                        <p class="font-semibold">Kepala Sekolah</p>
+                        <br><br><br>
+                        <p>(_________________________)</p>
+                    </div>
+                    <div class="text-center">
+                        <p>Dramaga, <span id="reportDateSignature"></span></p>
+                        <p class="font-semibold">Operator Sekolah</p>
+                        <br><br><br>
+                        <p>(_________________________)</p>
+                    </div>
                 </div>
-                <form id="complaintForm" class="p-6">
-                    <div class="mb-4">
-                        <label for="judul" class="block text-gray-700 font-medium mb-2">Judul Laporan</label>
-                        <input type="text" id="judul" name="judul" placeholder="Contoh: Fasilitas Toilet Rusak" class="w-full px-4 py-2 rounded-lg form-input" required>
-                    </div>
-                    <div class="grid md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label for="nama" class="block text-gray-700 font-medium mb-2">Nama Anda (Opsional)</label>
-                            <input type="text" id="nama" name="nama" placeholder="Masukkan nama Anda" class="w-full px-4 py-2 rounded-lg form-input">
-                        </div>
-                        <div class="md:mt-9">
-                            <label class="flex items-center text-gray-700 cursor-pointer">
-                                <input type="checkbox" id="anonim" class="h-5 w-5 text-[#001F3F] border-gray-300 rounded focus:ring-[#001F3F]">
-                                <span class="ml-2">Kirim sebagai anonim</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label for="laporan" class="block text-gray-700 font-medium mb-2">Isi Laporan Anda</label>
-                        <textarea id="laporan" name="laporan" rows="5" placeholder="Tuliskan keluhan atau aspirasi Anda di sini..." class="w-full px-4 py-2 rounded-lg form-input" required></textarea>
-                    </div>
-                    <div class="flex gap-4 mt-6">
-                         <button type="submit" class="w-full py-3 px-4 rounded-lg btn-yellow">
-                             Kirim Laporan
-                         </button>
-                        <button type="button" id="cancel-form-button" class="w-full font-semibold py-3 px-4 rounded-lg btn-secondary">
-                            Batal
-                        </button>
-                    </div>
-                </form>
-            </section>
-
-            <!-- Daftar Laporan -->
-            <section id="daftar-laporan">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
-                    <h2 class="text-2xl font-semibold text-[#001F3F] border-b-2 border-[#FBBF24] pb-2 mb-4 sm:mb-0">Daftar Laporan</h2>
-                    <div id="filter-container" class="flex flex-wrap gap-2 hidden"></div>
-                </div>
-
-                <div id="laporan-container" class="space-y-6">
-                    <!-- Template Loading -->
-                     <div class="card p-4 animate-pulse card-status-Terkirim">
-                         <div class="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
-                         <div class="h-4 bg-gray-200 rounded w-1/4 mb-5"></div>
-                         <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                         <div class="h-4 bg-gray-200 rounded w-full mb-4"></div>
-                         <div class="h-16 bg-gray-200 rounded w-full mt-4"></div>
-                     </div>
-                </div>
-            </section>
-        </main>
-
-        <footer class="text-center mt-12 text-gray-500 text-sm">
-            <p>&copy; 2025 Divisi Kesiswaan. Hak Cipta Dilindungi.</p>
-        </footer>
+            </div>
+             <div class="mt-12 text-center space-x-4 no-print">
+                <button id="backToDashboardBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </button>
+                <button id="printReportBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg">
+                    <i class="fas fa-print"></i> Cetak Laporan
+                </button>
+            </div>
+        </div>
     </div>
     
-    <div id="toast" class="toast">Pesan notifikasi</div>
+    <!-- ===== MODAL TAMBAH BARANG (tersembunyi) ===== -->
+    <div id="addItemModal" class="hidden modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md m-4 transform transition-all -translate-y-10 opacity-0">
+             <div class="flex justify-between items-center border-b pb-3 mb-4">
+                 <h2 class="text-2xl font-semibold text-gray-700">Tambah Barang Baru</h2>
+                 <button class="close-modal-btn text-2xl text-gray-500 hover:text-gray-800">&times;</button>
+             </div>
+             <form id="addItemForm" class="space-y-4 pt-2">
+                 <div>
+                    <label for="newItemName" class="block text-sm font-medium text-gray-700">Nama Barang</label>
+                    <input type="text" id="newItemName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required placeholder="Contoh: Proyektor Mini">
+                </div>
+                 <div>
+                    <label for="newItemDesc" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                    <input type="text" id="newItemDesc" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required placeholder="Contoh: Anker Nebula Capsule">
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" class="cancel-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">Batal</button>
+                    <button type="submit" class="btn-secondary text-white font-bold py-2 px-4 rounded-lg">Simpan</button>
+                </div>
+             </form>
+        </div>
+    </div>
+    
+    <!-- ===== MODAL LAPORAN KERUSAKAN (tersembunyi) ===== -->
+    <div id="damageReportModal" class="hidden modal fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md m-4 transform transition-all -translate-y-10 opacity-0">
+             <div class="flex justify-between items-center border-b pb-3 mb-4">
+                 <h2 class="text-2xl font-semibold text-gray-700">Laporkan Kerusakan</h2>
+                 <button class="close-modal-btn text-2xl text-gray-500 hover:text-gray-800">&times;</button>
+             </div>
+             <form id="damageReportForm" class="space-y-4 pt-2">
+                 <input type="hidden" id="damagedItemId">
+                 <div>
+                    <label for="damageDescription" class="block text-sm font-medium text-gray-700">Jelaskan Kerusakan</label>
+                    <textarea id="damageDescription" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required placeholder="Contoh: Lensa proyektor buram dan tidak bisa fokus..."></textarea>
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" class="cancel-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">Batal</button>
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">Kirim Laporan</button>
+                </div>
+             </form>
+        </div>
+    </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Konfigurasi Firebase
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO_KEY", authDomain: "DEMO.firebaseapp.com", projectId: "DEMO_PROJECT" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    <!-- Elemen Notifikasi -->
+    <div id="notification" class="fixed top-5 right-5 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transform -translate-y-10 flex items-center gap-3">
+        <i id="notification-icon" class="fas"></i>
+        <p id="notification-message"></p>
+    </div>
 
-        // Inisialisasi Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+    <script>
+        // === Data & State Aplikasi ===
+        let currentUser = null; // {name: '...', class: '...', role: '...'}
+        let inventory = []; // Data akan diambil dari Supabase
+
+        // === PENGATURAN SUPABASE - GANTI DENGAN KREDENSIAL ANDA! ===
+        const SUPABASE_URL = 'https://ipvkpkshhobokdvlfyoa.supabase.co'; // <-- Ganti dengan URL Supabase Anda
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwdmtwa3NoaG9ib2tkdmxmeW9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyOTc0ODcsImV4cCI6MjA3NTg3MzQ4N30.mi5DbEj524Yf0cuQ6xLuR1eDuCAaoNEPL4W8Ki06YpA'; // <-- Ganti dengan Kunci Anon (public) Anda
+
+        let supabaseClient; // Dideklarasikan di sini, diinisialisasi nanti
+
+        // === Selektor DOM ===
+        const loginScreen = document.getElementById('login-screen');
+        const appScreen = document.getElementById('app-screen');
+        const reportScreen = document.getElementById('report-screen');
+        const studentLoginForm = document.getElementById('studentLoginForm');
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const studentNameInput = document.getElementById('studentName');
+        const studentClassInput = document.getElementById('studentClass');
+        const adminUserInput = document.getElementById('adminUser');
+        const adminPassInput = document.getElementById('adminPass');
+        const showAdminLoginBtn = document.getElementById('showAdminLoginBtn');
+        const showStudentLoginBtn = document.getElementById('showStudentLoginBtn');
+        const studentLoginDiv = document.getElementById('student-login');
+        const adminLoginDiv = document.getElementById('admin-login');
+        const logoutButton = document.getElementById('logoutButton');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const adminControls = document.getElementById('admin-controls');
+        const loanFormWrapper = document.getElementById('loan-form-wrapper');
+        const myLoansWrapper = document.getElementById('my-loans-wrapper');
+        const myLoansList = document.getElementById('myLoansList');
         
-        // --- State Aplikasi ---
-        let currentUserRole = null; // 'siswa' atau 'admin'
-        let currentFilter = 'Semua'; // 'Semua', 'Terkirim', 'Diproses', 'Selesai', 'Ditolak'
+        const tableHead = document.getElementById('inventoryTableHead');
+        const tableBody = document.getElementById('inventoryTableBody');
+        const itemSelect = document.getElementById('itemSelect');
+        const loanForm = document.getElementById('loanForm');
+        const borrowerNameInput = document.getElementById('borrowerName');
+        const borrowerClassInput = document.getElementById('borrowerClass');
+        const loanDateInput = document.getElementById('loanDate');
+        
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notification-message');
+        const notificationIcon = document.getElementById('notification-icon');
+        
+        const addItemModal = document.getElementById('addItemModal');
+        const showAddItemModalBtn = document.getElementById('showAddItemModalBtn');
+        const addItemForm = document.getElementById('addItemForm');
+        
+        const damageReportModal = document.getElementById('damageReportModal');
+        const damageReportForm = document.getElementById('damageReportForm');
+        const damagedItemIdInput = document.getElementById('damagedItemId');
+        const damageDescriptionInput = document.getElementById('damageDescription');
 
-        // --- Elemen DOM ---
-        const loginContainer = document.getElementById('login-container');
-        const appContainer = document.getElementById('app-container');
-        const loginSiswaBtn = document.getElementById('login-siswa');
-        const mainLoginButtons = document.getElementById('main-login-buttons');
-        const showAdminLoginBtn = document.getElementById('show-admin-login');
-        const adminLoginForm = document.getElementById('admin-login-form');
-        const adminPasswordForm = document.getElementById('admin-password-form');
-        const adminPasswordInput = document.getElementById('admin-password');
-        const cancelAdminLoginBtn = document.getElementById('cancel-admin-login');
-        const logoutBtn = document.getElementById('logout-button');
-        const showFormButton = document.getElementById('show-form-button');
-        const cancelFormButton = document.getElementById('cancel-form-button');
-        const formLaporan = document.getElementById('form-laporan');
-        const complaintForm = document.getElementById('complaintForm');
-        const judulInput = document.getElementById('judul');
-        const namaInput = document.getElementById('nama');
-        const anonimCheckbox = document.getElementById('anonim');
-        const laporanInput = document.getElementById('laporan');
-        const laporanContainer = document.getElementById('laporan-container');
-        const filterContainer = document.getElementById('filter-container');
-        
-        const laporanCollection = collection(db, `artifacts/${appId}/public/data/pengaduan`);
+        const generateReportBtn = document.getElementById('generateReportBtn');
+        const backToDashboardBtn = document.getElementById('backToDashboardBtn');
+        const printReportBtn = document.getElementById('printReportBtn');
+        const reportDateEl = document.getElementById('reportDate');
+        const reportDateSignatureEl = document.getElementById('reportDateSignature');
+        const reportContentEl = document.getElementById('reportContent');
 
-        // --- Fungsi ---
-        
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
-        }
-        
-        function updateView() {
-            if (currentUserRole) {
-                loginContainer.classList.add('hidden');
-                appContainer.classList.remove('hidden');
-                
-                if (currentUserRole === 'siswa') {
-                    showFormButton.classList.remove('hidden');
-                    formLaporan.classList.add('hidden');
-                    filterContainer.classList.add('hidden');
-                } else { // admin
-                    showFormButton.classList.add('hidden');
-                    formLaporan.classList.add('hidden');
-                    filterContainer.classList.remove('hidden');
-                    renderFilterButtons();
-                }
-                
-                renderAllLaporan();
+        // === Fungsi Pengambilan Data Awal ===
+        async function fetchInventory() {
+            if (!supabaseClient) return;
+            const { data, error } = await supabaseClient.from('inventory').select('*').order('id', { ascending: true });
+            if (error) {
+                console.error('Error fetching inventory:', error);
+                showNotification('Gagal memuat data dari database.', false);
+                inventory = [];
             } else {
-                loginContainer.classList.remove('hidden');
-                appContainer.classList.add('hidden');
+                inventory = data;
             }
         }
 
-        async function authenticateAndInit() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                listenToLaporan();
-            } catch (error) {
-                console.error("Error saat autentikasi:", error);
-            }
-        }
-        
-        anonimCheckbox.addEventListener('change', () => {
-            namaInput.disabled = anonimCheckbox.checked;
-            if (anonimCheckbox.checked) {
-                namaInput.value = '';
-                namaInput.classList.add('bg-gray-200');
-            } else {
-                namaInput.classList.remove('bg-gray-200');
-            }
-        });
 
-        complaintForm.addEventListener('submit', async (e) => {
+        // === Fungsi Login & Logout ===
+        function handleStudentLogin(e) {
             e.preventDefault();
-            const submitButton = complaintForm.querySelector('button[type="submit"]');
+            const name = studentNameInput.value.trim();
+            const studentClass = studentClassInput.value.trim();
+            if (name && studentClass) {
+                currentUser = { name: name, class: studentClass, role: 'siswa' };
+                showApp();
+            }
+        }
+        
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = adminUserInput.value.trim();
+            const pass = adminPassInput.value.trim();
+            if (user === 'adminsekolah.sma1dramaga' && pass === '051908') {
+                currentUser = { name: 'Admin Sekolah', role: 'admin' };
+                showApp();
+            } else {
+                showNotification('Username atau password Admin salah!', false);
+            }
+        }
 
-            if (!laporanInput.value.trim() || !judulInput.value.trim()) {
-                showToast("Judul dan isi laporan tidak boleh kosong.");
+        function handleLogout() {
+            currentUser = null;
+            loginScreen.classList.remove('hidden');
+            appScreen.classList.add('opacity-0');
+            reportScreen.classList.add('hidden');
+            setTimeout(() => {
+                appScreen.classList.add('hidden');
+                loginScreen.classList.remove('opacity-0');
+                adminControls.classList.add('hidden');
+                studentLoginForm.reset();
+            }, 300);
+        }
+        
+        async function showApp() {
+            welcomeMessage.textContent = `Selamat datang, ${currentUser.name}!`;
+            borrowerNameInput.value = currentUser.name;
+            
+            if (currentUser.role === 'admin') {
+                adminControls.classList.remove('hidden');
+                loanFormWrapper.classList.add('hidden');
+                myLoansWrapper.classList.add('hidden');
+            } else { // Siswa
+                adminControls.classList.add('hidden');
+                loanFormWrapper.classList.remove('hidden');
+                myLoansWrapper.classList.remove('hidden');
+                borrowerNameInput.setAttribute('readonly', true);
+                borrowerNameInput.classList.add('bg-gray-100');
+                borrowerClassInput.value = currentUser.class;
+                borrowerClassInput.setAttribute('readonly', true);
+                borrowerClassInput.classList.add('bg-gray-100');
+            }
+            
+            appScreen.classList.remove('hidden');
+            reportScreen.classList.add('hidden');
+            setTimeout(() => {
+                loginScreen.classList.add('hidden');
+                appScreen.classList.remove('opacity-0');
+            }, 100);
+            await renderAll();
+        }
+
+        // === Fungsi Modal ===
+        function openModal(modal) {
+            const modalContent = modal.querySelector('div');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('-translate-y-10', 'opacity-0');
+                modalContent.classList.add('translate-y-0', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal(modal) {
+            const modalContent = modal.querySelector('div');
+            modalContent.classList.remove('translate-y-0', 'opacity-100');
+            modalContent.classList.add('-translate-y-10', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // === Fungsi CRUD & Manajemen Barang (Terhubung ke Supabase) ===
+        async function handleAddItem(e){
+            e.preventDefault();
+            const name = document.getElementById('newItemName').value.trim();
+            const desc = document.getElementById('newItemDesc').value.trim();
+            
+            if(name && desc){
+                const { error } = await supabaseClient.from('inventory').insert([
+                    { name: name, description: desc, status: 'Tersedia', borrower: '', borrowerClass: '', damageReport: '', extensionRequested: false }
+                ]);
+
+                if (error) {
+                    showNotification('Gagal menambahkan barang ke database.', false);
+                    console.error(error);
+                } else {
+                    showNotification(`Barang "${name}" berhasil ditambahkan.`, true);
+                    closeModal(addItemModal);
+                    addItemForm.reset();
+                    await renderAll();
+                }
+            }
+        }
+        
+        window.openDamageReportModal = function(itemId) {
+            damagedItemIdInput.value = itemId;
+            openModal(damageReportModal);
+        }
+        
+        async function handleDamageReport(e) {
+            e.preventDefault();
+            const itemId = parseInt(damagedItemIdInput.value);
+            const reportText = damageDescriptionInput.value.trim();
+            
+            const item = inventory.find(i => i.id === itemId);
+            if (item && reportText) {
+                const { error } = await supabaseClient.from('inventory').update({ 
+                    status: 'Rusak', 
+                    damageReport: reportText,
+                    borrower: `Dilaporkan oleh: ${item.borrower}`
+                }).eq('id', itemId);
+
+                if (error) {
+                    showNotification('Gagal mengirim laporan kerusakan.', false);
+                    console.error(error);
+                } else {
+                    showNotification(`Laporan kerusakan untuk "${item.name}" telah dikirim.`, true);
+                    closeModal(damageReportModal);
+                    damageReportForm.reset();
+                    await renderAll();
+                }
+            }
+        }
+
+        async function borrowItem(e) {
+            e.preventDefault();
+            const borrowerName = borrowerNameInput.value.trim();
+            const borrowerClass = borrowerClassInput.value.trim();
+            const itemId = parseInt(itemSelect.value);
+            const loanDate = loanDateInput.value;
+
+            if (!borrowerName || !borrowerClass || !itemId || !loanDate) {
+                showNotification('Harap isi semua kolom!', false);
                 return;
             }
 
-            // Disable button to prevent multiple submissions
-            submitButton.disabled = true;
-            submitButton.textContent = 'Mengirim...';
+            const loanDateObj = new Date(loanDate);
+            loanDateObj.setDate(loanDateObj.getDate() + 7);
+            const returnDate = loanDateObj.toISOString().split('T')[0];
 
-            const isAnonim = anonimCheckbox.checked;
-            const namaPelapor = isAnonim ? 'Anonim' : (namaInput.value.trim() || 'Anonim');
-            
-            try {
-                await addDoc(laporanCollection, {
-                    judul: judulInput.value,
-                    nama: namaPelapor,
-                    laporan: laporanInput.value,
-                    status: "Terkirim",
-                    tanggapan: "",
-                    reward: false,
-                    likes: 0,
-                    createdAt: serverTimestamp()
-                });
-                complaintForm.reset();
-                namaInput.disabled = false;
-                namaInput.classList.remove('bg-gray-200');
-                showToast("Laporan berhasil dikirim!");
-                formLaporan.classList.add('hidden');
-            } catch (error) {
-                console.error("Error menambah laporan: ", error);
-                showToast("Gagal mengirim laporan. Coba lagi.");
-            } finally {
-                // Re-enable button after submission attempt
-                submitButton.disabled = false;
-                submitButton.textContent = 'Kirim Laporan';
-            }
-        });
-        
-        async function handleAdminUpdate(docId, dataToUpdate) {
-            try {
-                const docRef = doc(db, `artifacts/${appId}/public/data/pengaduan`, docId);
-                await updateDoc(docRef, dataToUpdate);
-                showToast("Laporan berhasil diperbarui.");
-            } catch (error) {
-                console.error("Error memperbarui laporan:", error);
-                showToast("Gagal memperbarui laporan.");
+            const { error } = await supabaseClient.from('inventory').update({
+                status: 'Dipinjam',
+                borrower: borrowerName,
+                borrowerClass: borrowerClass,
+                loanDate: loanDate,
+                returnDate: returnDate,
+                extensionRequested: false,
+                damageReport: ''
+            }).eq('id', itemId);
+
+            if (error) {
+                showNotification('Gagal meminjam barang.', false);
+                console.error(error);
+            } else {
+                showNotification(`Barang berhasil dipinjam.`, true);
+                loanForm.reset();
+                loanDateInput.valueAsDate = new Date();
+                borrowerNameInput.value = currentUser.name;
+                borrowerClassInput.value = currentUser.class;
+                await renderAll();
             }
         }
         
-        async function handleLikeClick(docId) {
-            try {
-                const docRef = doc(db, `artifacts/${appId}/public/data/pengaduan`, docId);
-                await updateDoc(docRef, {
-                    likes: increment(1)
-                });
-            } catch (error) {
-                console.error("Error updating likes:", error);
-                showToast("Gagal menyukai laporan.");
+        window.returnItem = async function(itemId) {
+            const { error } = await supabaseClient.from('inventory').update({
+                status: 'Tersedia',
+                borrower: '',
+                borrowerClass: '',
+                loanDate: null,
+                returnDate: null,
+                extensionRequested: false
+            }).eq('id', itemId);
+
+            if (error) {
+                showNotification('Gagal mengembalikan barang.', false);
+                console.error(error);
+            } else {
+                showNotification(`Barang telah dikembalikan.`, true);
+                await renderAll();
             }
         }
-
-        let localLaporanCache = [];
         
-        function renderAllLaporan() {
-            laporanContainer.innerHTML = '';
-            
-            const filteredLaporan = localLaporanCache.filter(doc => {
-                if (currentUserRole !== 'admin' || currentFilter === 'Semua') {
-                    return true;
-                }
-                return doc.data().status === currentFilter;
-            });
+        window.reportDamageByAdmin = async function(itemId) {
+             const { error } = await supabaseClient.from('inventory').update({
+                status: 'Rusak',
+                damageReport: 'Dilaporkan oleh Admin',
+                borrower: '',
+                borrowerClass: '',
+                loanDate: null,
+                returnDate: null,
+                extensionRequested: false
+             }).eq('id', itemId);
 
-             if (filteredLaporan.length === 0) {
-                 if (localLaporanCache.length === 0) {
-                    laporanContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Belum ada laporan yang masuk.</p>';
-                 } else {
-                    laporanContainer.innerHTML = `<p class="text-center text-gray-500 py-4">Tidak ada laporan dengan status "${currentFilter}".</p>`;
-                 }
+             if (error) {
+                showNotification('Gagal melaporkan kerusakan.', false);
+                console.error(error);
              } else {
-                 filteredLaporan.forEach(doc => {
-                     const laporanElement = createLaporanCard(doc);
-                     laporanContainer.appendChild(laporanElement);
-                 });
+                showNotification(`Kerusakan telah dilaporkan.`, true);
+                await renderAll();
              }
         }
-
-        function renderFilterButtons() {
-            const statuses = ["Semua", "Terkirim", "Diproses", "Selesai", "Ditolak"];
-            filterContainer.innerHTML = '';
-            statuses.forEach(status => {
-                const button = document.createElement('button');
-                button.textContent = status;
-                button.dataset.status = status;
-                button.className = 'py-2 px-4 rounded-full text-sm font-semibold transition-all duration-200';
-                if (status === currentFilter) {
-                    button.classList.add('bg-[#001F3F]', 'text-white', 'shadow-md');
-                } else {
-                    button.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-100', 'border');
-                }
-                filterContainer.appendChild(button);
-            });
-        }
-
-        function createLaporanCard(doc) {
-            const data = doc.data();
-            const id = doc.id;
-            
-            const timestamp = data.createdAt ? data.createdAt.toDate() : new Date();
-            const formattedDate = timestamp.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-            const statusClass = {
-                "Terkirim": "bg-blue-100 text-blue-800",
-                "Diproses": "bg-yellow-100 text-yellow-800",
-                "Selesai": "bg-green-100 text-green-800",
-                "Ditolak": "bg-red-100 text-red-800"
-            };
-            const statusColor = statusClass[data.status] || "bg-gray-100 text-gray-800";
-            const rewardHTML = data.reward ? `<div class="mt-3 flex items-center gap-2 text-yellow-500 bg-yellow-50 font-semibold p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.006z" clip-rule="evenodd" /></svg>Laporan Membantu!</div>` : '';
-
-            const card = document.createElement('div');
-            card.className = `card p-5 card-status-${data.status}`;
-            card.setAttribute('data-id', id);
-
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <h3 class="font-bold text-xl text-[#001F3F]">${data.judul}</h3>
-                        <p class="font-medium text-md text-gray-700">${data.nama}</p>
-                    </div>
-                    <span class="text-xs ${statusColor} font-semibold px-3 py-1 rounded-full">${data.status}</span>
-                </div>
-                <p class="text-gray-500 text-sm mb-3">${formattedDate}</p>
-                <p class="text-gray-800 whitespace-pre-wrap">${data.laporan}</p>
-
-                <div class="flex justify-between items-center mt-4">
-                     <div class="flex items-center text-gray-500">
-                        <button data-role="like" class="flex items-center space-x-1.5 p-2 -ml-2 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors duration-200">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                           <span class="pointer-events-none">Suka</span>
-                        </button>
-                        <span class="ml-1 font-semibold text-gray-700">${data.likes || 0}</span>
-                    </div>
-                    ${rewardHTML}
-                </div>
-                
-                <div class="mt-4 border-t pt-4">
-                    <h4 class="font-semibold text-gray-700">Tanggapan Sekolah:</h4>
-                    ${data.tanggapan ? `<p class="text-gray-600 mt-1 whitespace-pre-wrap">${data.tanggapan}</p>` : `<p class="text-gray-400 mt-1 italic">Belum ada tanggapan.</p>`}
-                </div>
-                
-                ${currentUserRole === 'admin' ? `
-                <div class="admin-controls bg-gray-50 mt-4 border-t p-4 -m-5 mb-0 rounded-b-lg">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Beri Tanggapan</label>
-                            <textarea data-role="tanggapan" class="w-full px-3 py-2 rounded-lg form-input" rows="3">${data.tanggapan || ''}</textarea>
-                        </div>
-                        <div class="flex items-end gap-4">
-                            <div class="flex-grow">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Ubah Status</label>
-                                <select data-role="status" class="w-full px-3 py-2 form-input rounded-lg">
-                                    <option value="Terkirim" ${data.status === 'Terkirim' ? 'selected' : ''}>Terkirim</option>
-                                    <option value="Diproses" ${data.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
-                                    <option value="Selesai" ${data.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
-                                    <option value="Ditolak" ${data.status === 'Ditolak' ? 'selected' : ''}>Ditolak</option>
-                                </select>
-                            </div>
-                            <button data-role="reward" class="whitespace-nowrap font-semibold py-2 px-3 rounded-lg btn-yellow ${data.reward ? 'opacity-50 cursor-not-allowed' : ''}" ${data.reward ? 'disabled' : ''}>
-                                Beri Reward
-                            </button>
-                        </div>
-                        <button data-role="save" class="w-full mt-2 font-semibold py-2 px-4 rounded-lg btn-primary">
-                            Simpan Perubahan
-                        </button>
-                    </div>
-                </div>
-                ` : ''}
-            `;
-            return card;
-        }
-
-        // --- Event Listeners ---
-        loginSiswaBtn.addEventListener('click', () => { currentUserRole = 'siswa'; updateView(); });
         
-        showAdminLoginBtn.addEventListener('click', () => {
-            mainLoginButtons.classList.add('hidden');
-            adminLoginForm.classList.remove('hidden');
-        });
+        window.repairItem = async function(itemId) {
+            const { error } = await supabaseClient.from('inventory').update({
+                status: 'Tersedia',
+                damageReport: ''
+            }).eq('id', itemId);
 
-        cancelAdminLoginBtn.addEventListener('click', () => {
-            mainLoginButtons.classList.remove('hidden');
-            adminLoginForm.classList.add('hidden');
-            adminPasswordInput.value = '';
-        });
-
-        adminPasswordForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const enteredPassword = adminPasswordInput.value;
-            // PENTING: Password ini hanya untuk demonstrasi.
-            // Dalam aplikasi nyata, jangan pernah menyimpan password di kode seperti ini.
-            const ADMIN_PASSWORD = 'admin123';
-
-            if (enteredPassword === ADMIN_PASSWORD) {
-                currentUserRole = 'admin';
-                updateView();
-                // Reset tampilan login untuk sesi berikutnya
-                mainLoginButtons.classList.remove('hidden');
-                adminLoginForm.classList.add('hidden');
-                adminPasswordInput.value = '';
+            if (error) {
+                showNotification('Gagal memperbarui status barang.', false);
+                console.error(error);
             } else {
-                showToast('Password salah!');
-                adminPasswordInput.value = '';
+                showNotification(`Barang telah diperbaiki.`, true);
+                await renderAll();
             }
-        });
+        }
+        
+        window.requestExtension = async function(itemId) {
+            const { error } = await supabaseClient.from('inventory').update({ extensionRequested: true }).eq('id', itemId);
+            if (error) {
+                showNotification('Gagal mengajukan perpanjangan.', false);
+                console.error(error);
+            } else {
+                showNotification(`Permintaan perpanjangan telah diajukan.`, true);
+                await renderAll();
+            }
+        }
+        
+        window.approveExtension = async function(itemId) {
+            const item = inventory.find(i => i.id === itemId);
+            if (item) {
+                const currentReturnDate = new Date(item.returnDate);
+                currentReturnDate.setDate(currentReturnDate.getDate() + 7);
+                const newReturnDate = currentReturnDate.toISOString().split('T')[0];
+                
+                const { error } = await supabaseClient.from('inventory').update({
+                    returnDate: newReturnDate,
+                    extensionRequested: false
+                }).eq('id', itemId);
 
-        logoutBtn.addEventListener('click', () => { 
-            currentUserRole = null; 
-            currentFilter = 'Semua';
-            updateView(); 
-        });
+                if(error) {
+                    showNotification('Gagal menyetujui perpanjangan.', false);
+                    console.error(error);
+                } else {
+                    showNotification(`Perpanjangan disetujui.`, true);
+                    await renderAll();
+                }
+            }
+        }
+        
+        // === Fungsi Laporan ===
+        function generateDamageReport() {
+            const damagedItems = inventory.filter(item => item.status === 'Rusak');
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-        showFormButton.addEventListener('click', () => {
-            formLaporan.classList.remove('hidden');
-            formLaporan.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
+            reportDateEl.textContent = `Tanggal: ${formattedDate}`;
+            reportDateSignatureEl.textContent = today.toLocaleDateString('id-ID');
 
-        cancelFormButton.addEventListener('click', () => {
-            formLaporan.classList.add('hidden');
-        });
-
-        laporanContainer.addEventListener('click', (e) => {
-            const target = e.target;
-            const card = target.closest('[data-id]');
-            if (!card) return;
-
-            const docId = card.getAttribute('data-id');
-            const roleTarget = target.closest('[data-role]');
-            if (!roleTarget) return;
-
-            const role = roleTarget.getAttribute('data-role');
-
-            if (role === 'like') {
-                handleLikeClick(docId);
+            if (damagedItems.length === 0) {
+                reportContentEl.innerHTML = `<p class="text-center py-10 text-gray-600">Tidak ada barang yang dilaporkan rusak saat ini.</p>`;
+            } else {
+                let table = `
+                    <table class="w-full text-sm text-left text-gray-700 border-collapse border border-gray-400">
+                        <thead class="text-xs text-gray-800 uppercase bg-gray-200">
+                            <tr>
+                                <th class="px-4 py-2 border border-gray-400">No.</th>
+                                <th class="px-4 py-2 border border-gray-400">Nama Barang</th>
+                                <th class="px-4 py-2 border border-gray-400">Deskripsi</th>
+                                <th class="px-4 py-2 border border-gray-400">Catatan Kerusakan</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                damagedItems.forEach((item, index) => {
+                    table += `
+                        <tr class="bg-white border-b">
+                            <td class="px-4 py-2 border border-gray-400">${index + 1}</td>
+                            <td class="px-4 py-2 border border-gray-400 font-medium">${item.name || 'Laptop Asus'}</td>
+                            <td class="px-4 py-2 border border-gray-400">${item.description}</td>
+                            <td class="px-4 py-2 border border-gray-400">${item.damageReport || '-'}</td>
+                        </tr>`;
+                });
+                table += `</tbody></table>`;
+                reportContentEl.innerHTML = table;
             }
 
-            if (currentUserRole !== 'admin') return;
-            
-            if (role === 'save') {
-                const tanggapan = card.querySelector('[data-role="tanggapan"]').value;
-                const status = card.querySelector('[data-role="status"]').value;
-                handleAdminUpdate(docId, { tanggapan, status });
-            } else if (role === 'reward') {
-                handleAdminUpdate(docId, { reward: true });
-            }
-        });
+            // Tampilkan layar laporan
+            appScreen.classList.add('hidden');
+            reportScreen.classList.remove('hidden');
+            setTimeout(() => reportScreen.classList.remove('opacity-0'), 10);
+        }
 
-        filterContainer.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                currentFilter = e.target.dataset.status;
-                renderFilterButtons();
-                renderAllLaporan();
-            }
-        });
 
-        function listenToLaporan() {
-            const q = query(laporanCollection);
-            onSnapshot(q, (snapshot) => {
-                let docs = snapshot.docs;
-                // Sort by timestamp, newest first
-                docs.sort((a, b) => (b.data().createdAt?.toMillis() || 0) - (a.data().createdAt?.toMillis() || 0));
-                localLaporanCache = docs;
-                renderAllLaporan();
-            }, (error) => {
-                console.error("Error saat mengambil data:", error);
-                laporanContainer.innerHTML = '<p class="text-center text-red-500 py-4">Gagal memuat data laporan.</p>';
+        // === Fungsi Render Tampilan ===
+        function showNotification(message, isSuccess = true) {
+            notificationMessage.textContent = message;
+            notificationIcon.className = isSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+            notification.className = `fixed top-5 right-5 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transform -translate-y-10 flex items-center gap-3 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
+            requestAnimationFrame(() => notification.classList.remove('opacity-0', '-translate-y-10'));
+            setTimeout(() => notification.classList.add('opacity-0', '-translate-y-10'), 3000);
+        }
+        
+        function renderMyLoans() {
+            myLoansList.innerHTML = '';
+            const myItems = inventory.filter(item => item.borrower === currentUser.name);
+
+            if(myItems.length === 0) {
+                myLoansList.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Anda belum meminjam barang.</p>`;
+                return;
+            }
+
+            myItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'p-3 bg-sky-50 rounded-lg border border-sky-200';
+
+                let actionButtonsHTML = '<div class="flex gap-2 mt-2">';
+                if (item.extensionRequested) {
+                    actionButtonsHTML += `
+                        <button class="w-1/2 text-xs font-semibold py-1.5 px-3 rounded-md bg-gray-300 text-gray-600 cursor-not-allowed flex items-center justify-center gap-2" disabled>
+                            <i class="fas fa-clock"></i> Menunggu
+                        </button>`;
+                } else {
+                    actionButtonsHTML += `
+                        <button onclick="requestExtension(${item.id})" class="w-1/2 text-xs font-semibold text-white py-1.5 px-3 rounded-md bg-indigo-500 hover:bg-indigo-600 flex items-center justify-center gap-2">
+                            <i class="fas fa-plus-circle"></i> Perpanjang
+                        </button>`;
+                }
+                actionButtonsHTML += `
+                     <button onclick="openDamageReportModal(${item.id})" class="w-1/2 text-xs font-semibold text-white py-1.5 px-3 rounded-md bg-red-500 hover:bg-red-600 flex items-center justify-center gap-2">
+                         <i class="fas fa-exclamation-triangle"></i> Laporkan Rusak
+                    </button>
+                `;
+                actionButtonsHTML += '</div>';
+
+                itemDiv.innerHTML = `
+                    <p class="font-semibold text-gray-800">${item.name || 'Laptop Asus'}</p>
+                    <p class="text-xs text-gray-600">${item.description}</p>
+                    <div class="text-xs mt-2 pt-2 border-t border-sky-100 flex justify-between">
+                        <span>Dipinjam: <strong>${item.loanDate}</strong></span>
+                        <span>Kembali: <strong>${item.returnDate}</strong></span>
+                    </div>
+                    ${actionButtonsHTML}
+                `;
+                myLoansList.appendChild(itemDiv);
             });
         }
         
-        authenticateAndInit();
+        function renderTable() {
+            tableHead.innerHTML = '';
+            let headers = `
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            `;
+            if(currentUser.role === 'admin') {
+                headers += `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenggat Waktu</th>`;
+            }
+            headers += `<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>`;
+            tableHead.innerHTML = `<tr>${headers}</tr>`;
 
+            tableBody.innerHTML = '';
+            if (inventory.length === 0) {
+                const colspan = currentUser.role === 'admin' ? 4 : 3;
+                tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-gray-500">Belum ada barang inventaris.</td></tr>`;
+                return;
+            }
+
+            inventory.forEach(item => {
+                const row = document.createElement('tr');
+                let statusClass, statusInfo;
+                switch(item.status) {
+                    case 'Tersedia':
+                        statusClass = 'bg-emerald-100 text-emerald-800';
+                        break;
+                    case 'Dipinjam':
+                         statusClass = 'bg-amber-100 text-amber-800';
+                         break;
+                    case 'Rusak':
+                        statusClass = 'bg-slate-200 text-slate-800';
+                        break;
+                }
+                
+                statusInfo = `<span class="px-2.5 py-0.5 inline-flex items-center gap-2 text-xs leading-5 font-semibold rounded-full ${statusClass}">${item.status}</span>`;
+
+                if (item.status === 'Rusak' && item.damageReport && currentUser.role === 'admin') {
+                    statusInfo += `<i class="fas fa-info-circle text-gray-500 cursor-pointer" title="${item.damageReport}"></i>`;
+                }
+                
+                if(item.status === 'Dipinjam'){
+                    statusInfo += `<div class="text-xs text-gray-500 mt-1">oleh <strong>${item.borrower}</strong> (${item.borrowerClass})</div><div class="text-xs text-gray-500">(${item.loanDate})</div>`;
+                    
+                    if (currentUser.role === 'admin' && item.returnDate) {
+                        const today = new Date(); today.setHours(0, 0, 0, 0);
+                        const returnDate = new Date(item.returnDate);
+                        const timeDiff = returnDate.getTime() - today.getTime();
+                        const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                        let warningMessage = '', warningClass = '';
+                        if (dayDiff < 0) {
+                            warningMessage = `Terlambat ${Math.abs(dayDiff)} hari`;
+                            warningClass = 'bg-red-200 text-red-800';
+                        } else if (dayDiff <= 2) {
+                             warningMessage = `Kembalikan dalam ${dayDiff} hari`;
+                             warningClass = 'bg-yellow-200 text-yellow-800';
+                        }
+                        if(warningMessage){
+                            statusInfo += `<div class="mt-1.5 px-2 py-0.5 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full ${warningClass}"><i class="fas fa-exclamation-triangle"></i>${warningMessage}</div>`;
+                        }
+                    }
+                     if (currentUser.role === 'admin' && item.extensionRequested) {
+                        statusInfo += `<div class="mt-1.5 px-2 py-0.5 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-blue-200 text-blue-800"><i class="fas fa-hourglass-half"></i>Perpanjangan Diminta</div>`;
+                    }
+                }
+                
+                let rowContent = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-semibold text-gray-900">${item.name || 'Laptop Asus'}</div>
+                        <div class="text-xs text-gray-500">${item.description}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm"><div class="flex items-center gap-2">${statusInfo}</div></td>
+                `;
+
+                if (currentUser.role === 'admin') {
+                    rowContent += `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600">${item.returnDate || '-'}</td>`;
+                }
+                
+                let actionCellContent;
+                if(currentUser.role === 'admin') {
+                    actionCellContent = '<div class="flex flex-col items-center gap-1.5">';
+                    if (item.status === 'Dipinjam') {
+                        if (item.extensionRequested) {
+                             actionCellContent += `<button onclick="approveExtension(${item.id})" class="text-white font-bold py-1 px-3 rounded-md text-xs bg-purple-500 hover:bg-purple-600 w-32 transition-colors">Setujui Perpanjangan</button>`;
+                        }
+                        actionCellContent += `<button onclick="returnItem(${item.id})" class="text-white font-bold py-1 px-3 rounded-md text-xs bg-blue-500 hover:bg-blue-600 w-32 transition-colors">Tandai Kembali</button>`;
+                    } else if (item.status === 'Tersedia') {
+                        actionCellContent += `<div class="flex items-center justify-center gap-1.5 text-emerald-600 font-semibold text-xs h-[22px] w-32">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Tersedia</span>
+                            </div>`;
+                    }
+                    
+                    if(item.status === 'Rusak') {
+                        actionCellContent += `<button onclick="repairItem(${item.id})" class="text-white font-bold py-1 px-3 rounded-md text-xs bg-green-500 hover:bg-green-600 w-32 transition-colors flex items-center justify-center gap-1"><i class="fas fa-tools"></i>Perbaiki</button>`;
+                    } else {
+                         actionCellContent += `<button onclick="reportDamageByAdmin(${item.id})" class="text-white font-bold py-1 px-3 rounded-md text-xs bg-red-500 hover:bg-red-600 w-32 transition-colors flex items-center justify-center gap-1"><i class="fas fa-exclamation-triangle"></i>Laporkan Rusak</button>`;
+                    }
+                    actionCellContent += '</div>';
+
+                } else {
+                    actionCellContent = '<span class="text-xs text-gray-400 font-medium">Hanya Admin</span>';
+                }
+
+                rowContent += `<td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">${actionCellContent}</td>`;
+                
+                row.innerHTML = rowContent;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function populateItemSelect() {
+            itemSelect.innerHTML = '<option value="" disabled selected>Pilih barang yang tersedia...</option>';
+            const availableItems = inventory.filter(item => item.status === 'Tersedia');
+            if (availableItems.length === 0) {
+                 itemSelect.innerHTML = '<option value="" disabled>Semua barang sedang dipinjam atau rusak</option>';
+            } else {
+                 availableItems.forEach(item => {
+                    itemSelect.innerHTML += `<option value="${item.id}">${item.name || 'Laptop Asus'}</option>`;
+                });
+            }
+        }
+        
+        async function renderAll() {
+            await fetchInventory(); // Selalu ambil data terbaru dari database
+            if (currentUser && currentUser.role === 'siswa') {
+                renderMyLoans();
+            }
+            renderTable();
+            populateItemSelect();
+        }
+        
+        // === Event Listeners ===
+        studentLoginForm.addEventListener('submit', handleStudentLogin);
+        adminLoginForm.addEventListener('submit', handleAdminLogin);
+        logoutButton.addEventListener('click', handleLogout);
+        loanForm.addEventListener('submit', borrowItem);
+        damageReportForm.addEventListener('submit', handleDamageReport);
+
+        showAdminLoginBtn.addEventListener('click', () => {
+            studentLoginDiv.classList.add('hidden');
+            adminLoginDiv.classList.remove('hidden');
+        });
+
+        showStudentLoginBtn.addEventListener('click', () => {
+            adminLoginDiv.classList.add('hidden');
+            studentLoginDiv.classList.remove('hidden');
+        });
+
+        showAddItemModalBtn.addEventListener('click', () => openModal(addItemModal));
+        
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.querySelector('.close-modal-btn').addEventListener('click', () => closeModal(modal));
+            modal.querySelector('.cancel-btn').addEventListener('click', () => closeModal(modal));
+        });
+        
+        addItemForm.addEventListener('submit', handleAddItem);
+
+        generateReportBtn.addEventListener('click', generateDamageReport);
+        printReportBtn.addEventListener('click', () => window.print());
+        backToDashboardBtn.addEventListener('click', () => {
+            reportScreen.classList.add('hidden');
+            appScreen.classList.remove('hidden');
+        });
+
+
+        // Inisialisasi aplikasi
+        document.addEventListener('DOMContentLoaded', () => {
+            loanDateInput.valueAsDate = new Date();
+             if (SUPABASE_URL === 'URL_SUPABASE_ANDA' || SUPABASE_ANON_KEY === 'KUNCI_ANON_SUPABASE_ANDA') {
+                document.body.innerHTML = `<div class="min-h-screen flex items-center justify-center bg-red-50 text-red-700 p-4">
+                    <div class="text-center">
+                        <h1 class="text-2xl font-bold">Kesalahan Konfigurasi</h1>
+                        <p class="mt-2">URL Supabase atau Kunci Anon belum diatur. Silakan ikuti panduan di file <strong>panduan_supabase.md</strong> untuk mengatur koneksi database.</p>
+                    </div>
+                </div>`;
+            } else {
+                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        });
     </script>
 </body>
 </html>
+
+
 
